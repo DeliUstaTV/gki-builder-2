@@ -12,10 +12,10 @@ Before running the workflow, you need to configure some **secrets** in your GitH
 1. **`GH_TOKEN`** – Your GitHub personal access token, required for uploading build artifacts to the repository.  
    - [How to generate a GitHub Token?](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens)  
 
-2. **`TOKEN`** – Your Telegram bot token, required for sending build notification.
+2. **`TG_BOT_TOKEN`** – Your Telegram bot token, required for sending build notification.
    - [How to create a Telegram bot?](https://www.siteguarding.com/en/how-to-get-telegram-bot-api-token)  
 
-4. **`CHAT_ID`** – The Telegram chat or group ID where the bot will send notifications.  
+4. **`TG_CHAT_ID`** – The Telegram chat or group ID where the bot will send notifications.  
    - [How to get a Telegram chat ID?](https://www.wikihow.com/Know-Chat-ID-on-Telegram-on-Android)  
 
 ### How to Add Secrets to GitHub  
