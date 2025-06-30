@@ -38,40 +38,12 @@ ZIP_NAME=${ZIP_NAME//KVER/$LINUX_VERSION}
 ZIP_NAME=${ZIP_NAME//VARIANT/$VARIANT}
 
 # Download Clang
-CLANG_DIR="$workdir/clang"
-if [[ -z "$CLANG_BRANCH" ]]; then
-  log "🔽 Downloading Clang..."
-  aria2c -q -x 16 -s 16 -o tarball "$CLANG_URL"
-  mkdir -p "$CLANG_DIR"
-  tar -xf tarball -C "$CLANG_DIR"
-  rm tarball
-
-  if [[ $(find "$CLANG_DIR" -mindepth 1 -maxdepth 1 -type d | wc -l) -eq 1 ]] \
-    && [[ $(find "$CLANG_DIR" -mindepth 1 -maxdepth 1 -type f | wc -l) -eq 0 ]]; then
-    SINGLE_DIR=$(find "$CLANG_DIR" -mindepth 1 -maxdepth 1 -type d)
-    mv $SINGLE_DIR/* $CLANG_DIR/
-    rm -rf $SINGLE_DIR
-  fi
-else
-  log "🔽 Cloning Clang..."
-  git clone --depth=1 -q "$CLANG_URL" -b "$CLANG_BRANCH" "$CLANG_DIR"
-fi
+sudo apt install clang llvm lld gcc
 
 export PATH="$CLANG_DIR/bin:$PATH"
 
 # Extract clang version
 COMPILER_STRING=$(clang -v 2>&1 | head -n 1 | sed 's/(https..*//' | sed 's/ version//')
-
-# Clone GCC if not available
-if ! ls $CLANG_DIR/bin | grep -q "aarch64-linux-gnu"; then
-  log "🔽 Cloning GCC..."
-  git clone --depth=1 -q https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-gnu-9.3 $workdir/gcc
-  export PATH="$workdir/gcc/bin:$PATH"
-  CROSS_COMPILE_PREFIX="aarch64-linux-"
-else
-  CROSS_COMPILE_PREFIX="aarch64-linux-gnu-"
-fi
-
 cd $KSRC
 
 ## KernelSU setup
