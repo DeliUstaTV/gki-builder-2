@@ -40,7 +40,7 @@ ZIP_NAME=${ZIP_NAME//VARIANT/$VARIANT}
 CLANG_DIR="$workdir/clang"
 if [[ -z "$CLANG_BRANCH" ]]; then
   log "🔽 Downloading Clang..."
-  wget -qO clang-archive "$CLANG_URL"
+  wget --timeout=10 --tries=3 --retry-connrefused -qcO clang-archive "$CLANG_URL"
   mkdir -p "$CLANG_DIR"
   case "$(basename $CLANG_URL)" in
     *.tar.*)
@@ -71,16 +71,6 @@ export PATH="$CLANG_DIR/bin:$PATH"
 # Extract clang version
 COMPILER_STRING=$(clang -v 2>&1 | head -n 1 | sed 's/(https..*//' | sed 's/ version//')
 
-# Clone GCC if not available
-if ! ls $CLANG_DIR/bin | grep -q "aarch64-linux-gnu"; then
-  log "🔽 Cloning GCC..."
-  git clone --depth=1 -q https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-gnu-9.3 $workdir/gcc
-  export PATH="$workdir/gcc/bin:$PATH"
-  CROSS_COMPILE_PREFIX="aarch64-linux-"
-else
-  CROSS_COMPILE_PREFIX="aarch64-linux-gnu-"
-fi
-
 cd $KSRC
 
 ## KernelSU setup
@@ -100,7 +90,7 @@ if ksu_included; then
 
   # Install kernelsu
   case "$KSU" in
-    "Next") install_ksu bintang774/KernelSU-Next $(if susfs_included; then echo "next-susfs"; else echo "next"; fi) ;;
+    "Next") install_ksu pershoot/KernelSU-Next $(if susfs_included; then echo "next-susfs"; else echo "next"; fi) ;;
     "Suki") install_ksu SukiSU-Ultra/SukiSU-Ultra $(if susfs_included; then echo "susfs-main"; elif ksu_manual_hook; then echo "nongki"; else echo "main"; fi) ;;
   esac
   config --enable CONFIG_KSU
@@ -125,9 +115,14 @@ fi
 
 # KSU Manual Hooks
 if ksu_manual_hook; then
-  # Apply manual hook patch
   log "Applying manual hook patch"
-  patch -p1 < $workdir/kernel-patches/manual-hook.patch
+  if [[ "$KSU" == "Next" ]]; then
+    log "Using manual-hook v1.5"
+    patch -p1 --forward < $workdir/kernel-patches/manual-hook-v1.5.patch
+  else
+    log "Using manual-hook v1.4"
+    patch -p1 --forward < $workdir/kernel-patches/manual-hook-v1.4.patch
+  fi
   config --enable CONFIG_KSU_MANUAL_HOOK
   config --disable CONFIG_KSU_KPROBES_HOOK
   config --disable CONFIG_KSU_SUSFS_SUS_SU # Conflicts with manual hook
@@ -153,7 +148,7 @@ fi
 export KBUILD_BUILD_USER="$USER"
 export KBUILD_BUILD_HOST="$HOST"
 export KBUILD_BUILD_TIMESTAMP=$(date)
-BUILD_FLAGS="-j$(nproc --all) ARCH=arm64 LLVM=1 LLVM_IAS=1 O=out CROSS_COMPILE=$CROSS_COMPILE_PREFIX"
+BUILD_FLAGS="-j$(nproc --all) ARCH=arm64 LLVM=1 LLVM_IAS=1 O=out CROSS_COMPILE=aarch64-linux-gnu-"
 KERNEL_IMAGE="$KSRC/out/arch/arm64/boot/Image"
 KMI_CHECK="$workdir/scripts/KMI_function_symbols_test.py"
 MODULE_SYMVERS="$KSRC/out/Module.symvers"

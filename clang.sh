@@ -44,7 +44,7 @@ case "$1" in
     get_latest_clang "$AOSP_REPO"
     ;;
   "yuki")
-    get_latest_clang "$YUKI_CLANG"
+    get_latest_clang "$YUKI_REPO"
     ;;
   "lilium")
     get_latest_clang "$LILIUM_REPO"
@@ -53,7 +53,7 @@ case "$1" in
     get_latest_clang "$TNF_REPO"
     ;;
   "neutron")
-    get_latest_clang "$NEUTRON_REPO"
+    get_latest_clang "$NEUTRON_REPO" ".tar.zst"
     ;;
   "mandi-sa")
     get_latest_clang "$MANDISA_REPO" ".7z" | tac | head -n1
